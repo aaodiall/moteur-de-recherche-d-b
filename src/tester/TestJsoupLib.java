@@ -31,6 +31,7 @@ public class TestJsoupLib {
 	            stoplist.add( line.substring(0, 1).toUpperCase() + line.substring(1));
 	           
 	        }
+	        reader.close();
 	        
 	        //on parse le fichier html
 			Document doc = Jsoup.parse(input, "UTF-8", "");
