@@ -16,12 +16,12 @@ import org.jsoup.nodes.Element;
 public class TestJsoupLib {
 
 	public static void main(String[] args) {
-		File input = new File("/home/alpha/Downloads/Omar.html");
+		File input = new File("CORPUS/D1.html");
 		
 		
 		try {
 			//charge les mots de la stopliste.txt dans une liste
-			 BufferedReader reader = new BufferedReader(new FileReader("/home/alpha/Downloads/stopliste.txt"));
+			 BufferedReader reader = new BufferedReader(new FileReader("stopliste.txt"));
 			 List<String> stoplist = new ArrayList<String>();
 
 			String line;
