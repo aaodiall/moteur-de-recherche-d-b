@@ -11,11 +11,12 @@ public class TestFichierInverse {
 		System.out.print("Generation du fichier inverse...");
 		Parser.generateFichierInverse();
 		System.out.println(" DONE !");
-		searchEngineOneWord("Cinéma");
+		//searchEngineOneWord("Cinéma");
+		//afficherFichierInverse();
 	}
 
 	// Afficher le fichier inverse
-	public void afficherFichierInverse() {
+	public static void afficherFichierInverse() {
 		FichierInverse fichierInverse = FichierInverse.getInstance();
 		for (String terme : fichierInverse.getFichierInverse().keySet()) {
 			System.out.println(terme);
@@ -27,7 +28,7 @@ public class TestFichierInverse {
 		}
 	}
 
-	//
+	// Affiche les documents dans lequel apparaissent les termes
 	public static void searchEngineOneWord(String terme) {
 		FichierInverse fichierInverse = FichierInverse.getInstance();
 		ArrayList<String> listDocs = (ArrayList<String>) fichierInverse
@@ -39,4 +40,5 @@ public class TestFichierInverse {
 			}
 		}
 	}
+
 }
