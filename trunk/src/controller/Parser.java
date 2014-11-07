@@ -6,7 +6,7 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.LinkedHashSet;
+import java.util.HashMap;
 import java.util.List;
 
 import org.jsoup.Jsoup;
@@ -77,18 +77,14 @@ public class Parser {
 
 				}
 
-			//	System.out.println(text1);
-				// on supprime les mots redondants
-				LinkedHashSet<String> words = removeDuplicateString(text1);
+				// On renvoie une table de hachage avec les mots et leur nombre d'occurence
+				HashMap<String, Integer> wordsCounted = countWords(text1);
 
-				// String[] mots= text1.split(" ");
-				for (String s : words) {
-					fichierInverse.addEtiquette(s, nomDoc);
+				for (String s : wordsCounted.keySet()) {
+					fichierInverse.addEtiquette(s, nomDoc); // TODO : Remplacer par un stockage dans la base de données
 				}
 
-				// System.out.println("linked="+m.size()+" mot="+mots.length);
 			} catch (IOException e) {
-				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
 
@@ -96,8 +92,16 @@ public class Parser {
 
 	}
 
-	public static LinkedHashSet<String> removeDuplicateString(String s) {
-		return new LinkedHashSet<String>(Arrays.asList(s.split(" ")));
-	}
 
+	// Returns a Hashmap with the words and the number of time this words appears in the document
+		public static HashMap<String, Integer> countWords(String text){
+			ArrayList<String> words = new ArrayList<String>(Arrays.asList(text.split(" ")));
+			HashMap<String, Integer> wordCounted = new HashMap<String, Integer>();
+			for (String word : words ){
+				Integer n = wordCounted.get(word.toLowerCase());
+				n = (n == null) ? 1 : ++n;
+				wordCounted.put(word.toLowerCase(), n);
+			}
+			return wordCounted;
+		}
 }

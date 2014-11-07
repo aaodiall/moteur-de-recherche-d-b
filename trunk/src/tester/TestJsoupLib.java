@@ -6,7 +6,7 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.LinkedHashSet;
+import java.util.HashMap;
 import java.util.List;
 
 import org.jsoup.Jsoup;
@@ -45,32 +45,39 @@ public class TestJsoupLib {
 			//on supprime la ponctuation (trouver un regex qui regoupe tous les accent)
 			//ÀÁÂÃÄÅàáâãäåÒÓÔÕÖØòóôõöøÈÉÊËèéêëÇçÌÍÎÏìíîïÙÚÛÜùúûüÿÑñ ^[a-zA-Z]{3,7}$ Ééèêù 
 			String text1=body.text().replaceAll("[^-a-zA-Z0-9ÀÁÂÄÅáâãäåÒÓÔÕÖØòóôõöøÈÉÊËèéêëÇçÌÍÎÏìíîïÙÚÛÜùúûüÿÑñ\\s]", " ").replaceAll("\\s+", " ");;
-			 System.out.println(text1);
+			//System.out.println(text1);
 			 
-				//on supprime les mots de la stopliste
-			 for(String s: stoplist){
-				 text1=text1.replaceAll( "[ .,]"+ s +"[ .,]" , " ");
-			       
+			//on supprime les mots de la stopliste
+			for(String s: stoplist){
+				text1=text1.replaceAll( "[ .,]"+ s +"[ .,]" , " ");
 			 }
 			 
-			 System.out.println(text1);
-			 // on supprime les mots redondants
-			 LinkedHashSet<String> words=removeDuplicateString(text1);
+			 //System.out.println(text1);
+			 // On compte les mots
+			 HashMap<String, Integer> wordsCounted = countWords(text1);
 			 
-			// String[] mots= text1.split(" ");
-			//on affiche les mots
-			 for(String s: words){
-				 
-			        System.out.println(s);
+			//on affiche les mots et leur nombre d'occurence
+			 System.out.println("\nMot --- Ocurrence\n");
+			 for(String s : wordsCounted.keySet()){
+			        System.out.println(s + " : " + wordsCounted.get(s));
 			 }
-		//	 System.out.println("linked="+m.size()+" mot="+mots.length);
+			 
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 
 	}
-	public static LinkedHashSet<String> removeDuplicateString(String s) {
-	    return new LinkedHashSet<String>(Arrays.asList(s.split(" ")));
+	
+	// Returns a Hashmap with the words and the number of time this words appears in the document
+	public static HashMap<String, Integer> countWords(String text){
+		ArrayList<String> words = new ArrayList<String>(Arrays.asList(text.split(" ")));
+		HashMap<String, Integer> wordCounted = new HashMap<String, Integer>();
+		for (String word : words ){
+			Integer n = wordCounted.get(word.toLowerCase());
+			n = (n == null) ? 1 : ++n;
+			wordCounted.put(word.toLowerCase(), n);
+		}
+		return wordCounted;
 	}
-}	
+}
