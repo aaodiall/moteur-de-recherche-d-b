@@ -42,28 +42,35 @@ public class TestJsoupLib {
 			//on recupère le texte du body 
 			Element body=doc.body();
 			
+			// On récupère tout les sous Element du body
+			ArrayList<Element> subElements = subElements(body);
+
+			// On construit la chaine de caractère à partir de cette liste
+			StringBuilder sbd = new StringBuilder();
+			for (Element el : subElements){
+				sbd.append(el.text());
+				sbd.append(" ");
+			}
+			String text1 = sbd.toString();
+			
 			//on supprime la ponctuation (trouver un regex qui regoupe tous les accent)
 			//ÀÁÂÃÄÅàáâãäåÒÓÔÕÖØòóôõöøÈÉÊËèéêëÇçÌÍÎÏìíîïÙÚÛÜùúûüÿÑñ ^[a-zA-Z]{3,7}$ Ééèêù 
-			String text1=body.text().replaceAll("[^-a-zA-Z0-9ÀÁÂÄÅáâãäåÒÓÔÕÖØòóôõöøÈÉÊËèéêëÇçÌÍÎÏìíîïÙÚÛÜùúûüÿÑñ\\s]", " ").replaceAll("\\s+", " ");;
-			//System.out.println(text1);
+			text1=text1.replaceAll("[^a-zA-Z0-9ÀÁÂÄÅáâãäåÒÓÔÕÖØòóôõöøÈÉÊËèéêëÇçÌÍÎÏìíîïÙÚÛÜùúûüÿÑñ\\s]", " ").replaceAll("\\s+", " ");
 			 
 			//on supprime les mots de la stopliste
 			for(String s: stoplist){
 				text1=text1.replaceAll( "[ .,]"+ s +"[ .,]" , " ");
 			 }
 			 
-			 //System.out.println(text1);
 			 // On compte les mots
 			 HashMap<String, Integer> wordsCounted = countWords(text1);
 			 
 			//on affiche les mots et leur nombre d'occurence
-			 System.out.println("\nMot --- Ocurrence\n");
 			 for(String s : wordsCounted.keySet()){
 			        System.out.println(s + " : " + wordsCounted.get(s));
 			 }
 			 
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 
@@ -74,10 +81,25 @@ public class TestJsoupLib {
 		ArrayList<String> words = new ArrayList<String>(Arrays.asList(text.split(" ")));
 		HashMap<String, Integer> wordCounted = new HashMap<String, Integer>();
 		for (String word : words ){
-			Integer n = wordCounted.get(word.toLowerCase());
+			Integer n = wordCounted.get(word);
 			n = (n == null) ? 1 : ++n;
-			wordCounted.put(word.toLowerCase(), n);
+			wordCounted.put(word, n);
 		}
 		return wordCounted;
+	}
+	
+	// Create a ArrayList of Elements with all the subElements of an Element
+	public static ArrayList<Element> subElements(Element el){
+		ArrayList<Element> elts = new ArrayList<Element>();
+		if (el.children().first() != null){
+			for (Element child : el.children()){
+				ArrayList<Element> eltsChild = subElements(child);
+				elts.addAll(eltsChild);
+			}
+		}
+		else {
+			elts.add(el);
+		}
+		return elts;
 	}
 }
