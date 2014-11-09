@@ -12,7 +12,7 @@ public class TestFichierInverse {
 		Parser.generateFichierInverse();
 		System.out.println(" DONE !");
 		//searchEngineOneWord("Cinéma");
-		//afficherFichierInverse();
+		afficherFichierInverse();
 	}
 
 	// Afficher le fichier inverse
