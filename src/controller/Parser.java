@@ -9,10 +9,20 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 
+import org.json.simple.JSONArray;
+import org.json.simple.JSONObject;
+import org.json.simple.parser.JSONParser;
+import org.json.simple.parser.ParseException;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 
+import com.mongodb.DBCollection;
+import com.mongodb.DBObject;
+
+import dao.MongoDB;
+
+import model.Etiquette;
 import model.FichierInverse;
 import model.OccurenceDocument;
 
@@ -26,9 +36,66 @@ public class Parser {
 
 	}
 
-	// Méthode qui créé le fichier inverse
-	public static void generateFichierInverse() {
-		FichierInverse fichierInverse = FichierInverse.getInstance();
+	public  static void main( String args[] ){
+		MongoDB mongo=new MongoDB();
+		DBCollection coll=mongo.connection();
+		//stockerFicherInverse(mongo, coll);
+		DBObject object =mongo.findTerme(coll, "cinéma");
+		DBObject[] object1 =searchPhrase(mongo, "cinéma cinéma");
+		
+		displayResults(object1);
+		
+
+	}
+
+	// Méthode qui sauve le fichier inverse dans la base de données
+	public static void test() {
+		//FichierInverse fichierInverse = FichierInverse.getInstance();
+
+		MongoDB mongo=new MongoDB();
+		DBCollection coll=mongo.connection();
+		stockerFicherInverse(mongo, coll);
+		mongo.findTerme(coll, "cinéma");
+
+
+
+	}
+
+	
+	public static void displayResults(DBObject[] results){
+		
+		for(DBObject aResult : results){
+			JSONParser json=new JSONParser();
+			try {
+				Object obj= json.parse(aResult.toString());
+				JSONObject document = (JSONObject)new JSONParser().parse(obj.toString());
+				JSONArray documentContain=(JSONArray)document.get("document");
+				
+				for(int i=2; i< documentContain.size();i++){
+					JSONObject obj2=(JSONObject)documentContain.get(i);
+					System.out.println("document=" + obj2.get("nom")+ " poids=" + obj2.get("poids") );
+					
+				}
+				System.out.println(" ");
+			} catch (ParseException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		}
+	}
+	
+	public static  DBObject[] searchPhrase(MongoDB mongo,String request){
+		DBCollection coll=mongo.connection();
+		String [] array= request.split(" ");
+		DBObject[] results=new DBObject[array.length];
+		for(int i=0; i<array.length;i++){
+			results[i]=mongo.findTerme(coll, array[i]);
+		}
+		return results;
+		
+	}
+
+	public static void stockerFicherInverse(MongoDB mongo,DBCollection coll){
 		// Parcourir le dossier
 		File CORPUS = new File(NOM_DOSSIER);
 		String[] listeFichier = CORPUS.list();
@@ -47,7 +114,7 @@ public class Parser {
 					stoplist.add(line.substring(0, 1).toUpperCase()	+ line.substring(1));
 				}
 				reader.close();
-				
+
 				// on parse le fichier html
 				Document doc = Jsoup.parse(input, "UTF-8", "");
 
@@ -56,7 +123,7 @@ public class Parser {
 
 				// on recupère le texte du body
 				Element body = doc.body();
-				
+
 				// On récupère tout les sous Element du body
 				ArrayList<Element> subElements = subElements(body);
 
@@ -67,7 +134,7 @@ public class Parser {
 					sbd.append(" ");
 				}
 				String text1 = sbd.toString();
-				
+
 				// on supprime la ponctuation (trouver un regex qui regoupe tous les accent)
 				// ÀÁÂÃÄÅàáâãäåÒÓÔÕÖØòóôõöøÈÉÊËèéêëÇçÌÍÎÏìíîïÙÚÛÜùúûüÿÑñ ^[a-zA-Z]{3,7}$ Ééèêù
 				text1 = text1
@@ -85,7 +152,10 @@ public class Parser {
 				HashMap<String, Integer> wordsCounted = countWords(text1);
 
 				for (String s : wordsCounted.keySet()) {
-					fichierInverse.addEtiquette(s, nomDoc); // TODO : Remplacer par un stockage dans la base de données
+					Etiquette etiquette= new Etiquette(s, wordsCounted.get(s),nomDoc);
+
+					mongo.addEtiquette(coll, etiquette);
+					//fichierInverse.addEtiquette(s, nomDoc); // TODO : Remplacer par un stockage dans la base de données
 				}
 
 			} catch (IOException e) {
@@ -93,7 +163,6 @@ public class Parser {
 			}
 
 		}
-
 	}
 
 
@@ -108,7 +177,7 @@ public class Parser {
 		}
 		return wordCounted;
 	}
-		
+
 	// Create a ArrayList of Elements with all the subElements of an Element
 	public static ArrayList<Element> subElements(Element el){
 		ArrayList<Element> elts = new ArrayList<Element>();

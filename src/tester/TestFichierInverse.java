@@ -9,7 +9,7 @@ public class TestFichierInverse {
 
 	public static void main(String[] args) {
 		System.out.print("Generation du fichier inverse...");
-		Parser.generateFichierInverse();
+	//	Parser.generateFichierInverse();
 		System.out.println(" DONE !");
 		//searchEngineOneWord("Cinéma");
 		afficherFichierInverse();
