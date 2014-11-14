@@ -21,15 +21,15 @@ import com.mongodb.DBCollection;
 import com.mongodb.DBObject;
 
 import dao.MongoDB;
-
 import model.Etiquette;
-import model.FichierInverse;
 import model.OccurenceDocument;
 
 public class Parser {
 
 	private static final String NOM_DOSSIER = "CORPUS";
 	private static final String STOP_LIST = "stopliste.txt";
+	// A hashmap with each tag and their ponderation
+	private static final HashMap<String, Integer> valueTag = createValueTag();
 
 	public List<OccurenceDocument> parser(String terme) {
 		return null;
@@ -78,7 +78,6 @@ public class Parser {
 				}
 				System.out.println(" ");
 			} catch (ParseException e) {
-				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
 		}
@@ -95,6 +94,19 @@ public class Parser {
 		
 	}
 
+	private static HashMap<String, Integer> createValueTag(){
+		HashMap<String, Integer> valueTag = new HashMap<String, Integer>();
+		valueTag.put("title", 7);
+		valueTag.put("h1", 5);
+		valueTag.put("h2", 4);
+		valueTag.put("h3", 3);
+		valueTag.put("b", 2);
+		valueTag.put("strong", 2);
+		valueTag.put("em", 2);
+		return valueTag;
+	}
+	
+	
 	public static void stockerFicherInverse(MongoDB mongo,DBCollection coll){
 		// Parcourir le dossier
 		File CORPUS = new File(NOM_DOSSIER);
@@ -123,14 +135,19 @@ public class Parser {
 
 				// on recupère le texte du body
 				Element body = doc.body();
-
+				
 				// On récupère tout les sous Element du body
 				ArrayList<Element> subElements = subElements(body);
-
+				
 				// On construit la chaine de caractère à partir de cette liste
 				StringBuilder sbd = new StringBuilder();
 				for (Element el : subElements){
 					sbd.append(el.text());
+					sbd.append(" ");
+				}
+				// On ajoute le titre à cette chaine de caractère
+				for (int i1 = 0 ; i1 < valueTag.get("title") ; i1++){
+					sbd.append(doc.title());
 					sbd.append(" ");
 				}
 				String text1 = sbd.toString();
@@ -153,9 +170,7 @@ public class Parser {
 
 				for (String s : wordsCounted.keySet()) {
 					Etiquette etiquette= new Etiquette(s, wordsCounted.get(s),nomDoc);
-
 					mongo.addEtiquette(coll, etiquette);
-					//fichierInverse.addEtiquette(s, nomDoc); // TODO : Remplacer par un stockage dans la base de données
 				}
 
 			} catch (IOException e) {
@@ -180,16 +195,25 @@ public class Parser {
 
 	// Create a ArrayList of Elements with all the subElements of an Element
 	public static ArrayList<Element> subElements(Element el){
+		// The element is put multiple time if the valueTag is > 1
+		Integer value = valueTag.get(el.tagName());
+		value = (value==null) ? 1 : value;
 		ArrayList<Element> elts = new ArrayList<Element>();
 		if (el.children().first() != null){
 			for (Element child : el.children()){
 				ArrayList<Element> eltsChild = subElements(child);
-				elts.addAll(eltsChild);
+				for (int i = 0 ; i < value ; i++){
+					elts.addAll(eltsChild);
+				}
 			}
 		}
 		else {
-			elts.add(el);
+			for (int i = 0 ; i < value ; i++){
+				
+				elts.add(el);
+			}
 		}
 		return elts;
 	}
+
 }
