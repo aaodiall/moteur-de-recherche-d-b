@@ -9,91 +9,37 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 
-import org.json.simple.JSONArray;
-import org.json.simple.JSONObject;
-import org.json.simple.parser.JSONParser;
-import org.json.simple.parser.ParseException;
+import model.Etiquette;
+
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 
 import com.mongodb.DBCollection;
-import com.mongodb.DBObject;
 
 import dao.MongoDB;
-import model.Etiquette;
-import model.OccurenceDocument;
 
 public class Parser {
 
 	private static final String NOM_DOSSIER = "CORPUS";
 	private static final String STOP_LIST = "stopliste.txt";
-	// A hashmap with each tag and their ponderation
-	private static final HashMap<String, Integer> valueTag = createValueTag();
+	private static final HashMap<String,Integer> valueTag= createValueTag();
 
-	public List<OccurenceDocument> parser(String terme) {
-		return null;
-
-	}
+	
 
 	public  static void main( String args[] ){
 		MongoDB mongo=new MongoDB();
 		DBCollection coll=mongo.connection();
-		//stockerFicherInverse(mongo, coll);
-		DBObject object =mongo.findTerme(coll, "cinéma");
-		DBObject[] object1 =searchPhrase(mongo, "cinéma cinéma");
-		
-		displayResults(object1);
-		
-
-	}
-
-	// Méthode qui sauve le fichier inverse dans la base de données
-	public static void test() {
-		//FichierInverse fichierInverse = FichierInverse.getInstance();
-
-		MongoDB mongo=new MongoDB();
-		DBCollection coll=mongo.connection();
-		stockerFicherInverse(mongo, coll);
-		mongo.findTerme(coll, "cinéma");
-
-
+		stockerFicherInverse(mongo,coll);
 
 	}
 
 	
-	public static void displayResults(DBObject[] results){
-		
-		for(DBObject aResult : results){
-			JSONParser json=new JSONParser();
-			try {
-				Object obj= json.parse(aResult.toString());
-				JSONObject document = (JSONObject)new JSONParser().parse(obj.toString());
-				JSONArray documentContain=(JSONArray)document.get("document");
-				
-				for(int i=2; i< documentContain.size();i++){
-					JSONObject obj2=(JSONObject)documentContain.get(i);
-					System.out.println("document=" + obj2.get("nom")+ " poids=" + obj2.get("poids") );
-					
-				}
-				System.out.println(" ");
-			} catch (ParseException e) {
-				e.printStackTrace();
-			}
-		}
-	}
-	
-	public static  DBObject[] searchPhrase(MongoDB mongo,String request){
-		DBCollection coll=mongo.connection();
-		String [] array= request.split(" ");
-		DBObject[] results=new DBObject[array.length];
-		for(int i=0; i<array.length;i++){
-			results[i]=mongo.findTerme(coll, array[i]);
-		}
-		return results;
-		
-	}
 
+	
+	
+	
+	
 	private static HashMap<String, Integer> createValueTag(){
 		HashMap<String, Integer> valueTag = new HashMap<String, Integer>();
 		valueTag.put("title", 7);
@@ -135,10 +81,10 @@ public class Parser {
 
 				// on recupère le texte du body
 				Element body = doc.body();
-				
+
 				// On récupère tout les sous Element du body
 				ArrayList<Element> subElements = subElements(body);
-				
+
 				// On construit la chaine de caractère à partir de cette liste
 				StringBuilder sbd = new StringBuilder();
 				for (Element el : subElements){
@@ -215,5 +161,4 @@ public class Parser {
 		}
 		return elts;
 	}
-
 }

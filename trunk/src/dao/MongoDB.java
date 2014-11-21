@@ -91,10 +91,10 @@ public class MongoDB {
 		BasicDBObject except = new BasicDBObject("_id", 0).
 				append("terme",  0);
 		DBCursor cursor = coll.find(whereQuery,except);
-		/*if(cursor.hasNext()){
-			System.out.println(cursor.next());
-		}*/
-		return cursor.next();
+		if(cursor.hasNext()){
+			return cursor.next();
+		}
+		else return null;
 
 
 	}
