@@ -1,6 +1,7 @@
 package sparql;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -15,9 +16,7 @@ public class Synonym {
         String query = "ASK WHERE { ?s ?p ?o }";
         boolean serverIsUp = sparqlClient.ask(query);
         if (serverIsUp) {
-            System.out.println("server is UP");
             // Creation and execution of the SPARQL query to get the labels of an object with the label "term"
-            System.out.println("Récupération des synonymes de " + term + "...");
             query = "PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>"+
             		"PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>"+
             		"PREFIX owl:  <http://www.w3.org/2002/07/owl#>"+
@@ -26,15 +25,13 @@ public class Synonym {
             		"{"+
             		"?perstype rdfs:label \"" + term + "\"@fr."+
             		"?perstype rdfs:label ?name."+
+            		"FILTER ( lang(?name) = \"fr\" )"+
             		"}";
-            System.out.println("Lancement de la requête : " + query);
             Iterable<Map<String, String>> results = sparqlClient.select(query);
             // Put the results in a list
-            System.out.print("OK !\nRécupération des synonymes dans une liste...");
             for (Map<String, String> result : results) {
             	synonymes.add(result.get("name"));
             }
-            System.out.println("OK !");
         }
         else{
         	System.out.println("service is DOWN");
@@ -43,15 +40,39 @@ public class Synonym {
 	}
 	
 	
-	
+	// Méthode qui prend en argument une requete, et qui la modifie
+	public static HashMap<String, Float> changeRequest(String[] requete){
+		HashMap<String, Float> res = new HashMap<String, Float>();
+		for (String mot : requete){
+			ArrayList<String> synonymes = (ArrayList<String>) getSynonyms(mot);
+			if (synonymes.size() == 0){
+				res.put(mot, (float) 1.0);
+			}
+			else{
+				float ponderation = (float) (1.0/(float)(synonymes.size()));
+				for (String syn : synonymes){
+					res.put(syn, ponderation);
+				}
+			}
+		}
+		return res;
+		
+	}
 	
 	
 	public static void main(String[] args) {
-		String word = "Omar Sy";
+		/*
+		String word = "personnage";
 		List<String> synonymes = getSynonyms(word);
 		System.out.println("Affichage des synonymes de " + word + " : ");
 		for (String syn : synonymes){
 			System.out.println("  " + syn);
+		}
+		*/
+		String[] req = {"personnage", "Intouchable"};
+		HashMap<String, Float> newreq = changeRequest(req);
+		for (String mot : newreq.keySet() ){
+			System.out.println(mot + "   pondération : " + newreq.get(mot));
 		}
 	}
 }

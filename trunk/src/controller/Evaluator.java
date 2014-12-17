@@ -8,11 +8,15 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
+import java.util.Set;
 
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
+
+import sparql.Synonym;
 
 import com.mongodb.DBCollection;
 import com.mongodb.DBObject;
@@ -27,6 +31,9 @@ public class Evaluator {
 
 	public  static void main( String args[] ){
 		evaluatorRequest();
+		//MongoDB mongo=new MongoDB();
+		//DBCollection coll=mongo.connection();
+		//displayResults(searchPhrase(mongo, coll, "personnage,Intouchable"));
 	}
 	
 	
@@ -59,10 +66,13 @@ public class Evaluator {
 			ArrayList<String> requetes =fileToList(reader);
 			System.out.println(requetes.size());
 			for(int i=0; i< requetes.size();i++){
+				//find synonymes
+				
+				HashMap newreq = Synonym.changeRequest(requetes.get(i).split(","));
 				//search phrase
-				DBObject[] result =searchPhrase(mongo,coll,requetes.get(i));
+				DBObject[] result =searchPhrase(mongo,coll,newreq.keySet());
 				//evaluer la requete
-				Object[] evaluation=evaluationRequest(result) ;
+				Object[] evaluation=evaluationRequest(result, newreq) ;
 				//copie dans fichier
 				display(evaluation, i+1);
 				System.out.println(requetes.get(i)+" "+(i+1));
@@ -72,6 +82,8 @@ public class Evaluator {
 			e.printStackTrace();
 		}
 	}
+	
+	
 
 	public  static ArrayList<String> fileToList(BufferedReader reader){
 
@@ -93,14 +105,15 @@ public class Evaluator {
 		return req;
 	}
 
-	public static  DBObject[] searchPhrase(MongoDB mongo,DBCollection coll,String request){
+	public static  DBObject[] searchPhrase(MongoDB mongo,DBCollection coll,Set<String> array){
 		
-		String [] array= request.split(",");
-		
-		DBObject[] results=new DBObject[array.length];
-		for(int i=0; i<array.length;i++){
+		//String [] array= request.split(",");
+		int i =0;
+		DBObject[] results=new DBObject[array.size()];
+		for(String str : array){
 		//	System.out.println(array[i]+"taille: "+array.length);
-			results[i]=mongo.findTerme(coll, array[i]);
+			results[i]=mongo.findTerme(coll, str);
+			i++;
 		}
 		return results;
 
@@ -124,13 +137,13 @@ public class Evaluator {
 	}
 
 
-	public static Object[] evaluationRequest(DBObject[] results) throws IOException{
+	public static Object[] evaluationRequest(DBObject[] results, HashMap<String, Float> request) throws IOException{
 
 		/*/BufferedReader reader = new BufferedReader(new FileReader(REQ));
 		ArrayList<String> req= fileToList(reader);*/
 
 
-		HashMap<String, Integer> vector = new HashMap<String, Integer>();
+		HashMap<String, Float> vector = new HashMap<String, Float>();
 		for(DBObject aResult : results){
 			if(aResult!=null){
 				JSONParser json=new JSONParser();
@@ -139,14 +152,14 @@ public class Evaluator {
 					JSONObject document = (JSONObject)new JSONParser().parse(obj.toString());
 					JSONArray documentContain=(JSONArray)document.get("document");
 
-					for(int i=2; i< documentContain.size();i++){
+					for(int i=0; i< documentContain.size();i++){
 						JSONObject obj2=(JSONObject)documentContain.get(i);
-						Integer n = vector.get(obj2.get("nom"));
-
+						Float n = vector.get(obj2.get("nom"));
+						Float ponderation = request.get(document.get("terme").toString());
 						if(n==null){
-							n=Integer.parseInt(obj2.get("poids").toString());
+							n=Float.parseFloat(obj2.get("poids").toString())*ponderation;
 						}else{
-							n+=Integer.parseInt(obj2.get("poids").toString());
+							n+=Float.parseFloat(obj2.get("poids").toString())*ponderation;
 						}
 						vector.put(obj2.get("nom").toString(), n);
 
@@ -160,7 +173,7 @@ public class Evaluator {
 			}
 			
 		}
-		vector= (HashMap<String, Integer>) MapUtil.sortByValue( vector );
+		vector= (HashMap<String, Float>) MapUtil.sortByValue( vector );
 
 
 		return  vector.keySet().toArray();

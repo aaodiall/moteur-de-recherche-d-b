@@ -88,10 +88,10 @@ public class MongoDB {
 		BasicDBObject whereQuery = new BasicDBObject();
 
 		whereQuery.put("terme",terme);
-		BasicDBObject except = new BasicDBObject("_id", 0).
-				append("terme",  0);
+		BasicDBObject except = new BasicDBObject("_id", 0);
 		DBCursor cursor = coll.find(whereQuery,except);
 		if(cursor.hasNext()){
+			//System.out.println(cursor.next());
 			return cursor.next();
 		}
 		else return null;
