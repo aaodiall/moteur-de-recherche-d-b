@@ -1,205 +1,133 @@
 package controller;
 
-import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileNotFoundException;
-import java.io.FileReader;
-import java.io.IOException;
-import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
-import java.util.Set;
-
-import org.json.simple.JSONArray;
-import org.json.simple.JSONObject;
-import org.json.simple.parser.JSONParser;
-import org.json.simple.parser.ParseException;
-
-import sparql.Synonym;
-
-import com.mongodb.DBCollection;
-import com.mongodb.DBObject;
-
-import dao.MongoDB;
+import java.util.LinkedHashMap;
+import java.util.Locale;
+import java.util.Scanner;
 
 public class Evaluator {
 
-	private static final String REQ="req.txt";
 	private static final String NOM_DOSSIER = "REQ";
 	private static final String Q_REL = "qrels";
-
-	public  static void main( String args[] ){
-		evaluatorRequest();
-		//MongoDB mongo=new MongoDB();
-		//DBCollection coll=mongo.connection();
-		//displayResults(searchPhrase(mongo, coll, "personnage,Intouchable"));
+	private static final String DOC_PATTERN = "D[0-9]+\\.html";
+	private static final int PR5 = 5;
+	private static final int PR10 = 10;
+	private static final int PR25 = 25;
+	
+	
+	// Evaluate all the requests
+	public static void evaluatorFinal(){
+		File[] resList = new File(NOM_DOSSIER).listFiles();
+		File[] qrelList = new File(Q_REL).listFiles();
+		float moyenne5total = 0.0f;
+		float moyenne10total = 0.0f;
+		float moyenne25total = 0.0f;
+		// check the length
+		if (resList.length != qrelList.length){
+			System.err.println("Error : different number of files in the folders " + Q_REL + " and " + NOM_DOSSIER + "!");
+			return;
+		}
+		for (int i = 0 ; i < resList.length ; i++){
+			HashMap<String, Float> qrel = readQrelFile(qrelList[i]);
+			ArrayList<String> res = getResultatFromReq(resList[i]);
+			System.out.println("Requete " + (i+1));
+			// Precision 5
+			float moyenne5 = compareRequest(qrel, res, PR5);
+			System.out.println(toString(moyenne5, PR5));
+			moyenne5total += moyenne5;
+			// Precision 10
+			float moyenne10 = compareRequest(qrel, res, PR10);
+			System.out.println(toString(moyenne10, PR10));
+			moyenne10total += moyenne10;
+			// Precision 25
+			float moyenne25 = compareRequest(qrel, res, PR25);
+			System.out.println(toString(moyenne25, PR25));
+			moyenne25total += moyenne25;
+		}
+		// Affiche les moyennes
+		System.out.println("Moyennes : ");
+		System.out.println("Précision à 5 : " + moyenne5total/(float)resList.length);
+		System.out.println("Précision à 10 : " + moyenne10total/(float)resList.length);
+		System.out.println("Précision à 25 : " + moyenne25total/(float)resList.length);
 	}
 	
 	
-	/*public static void evaluator(){
-		File CORPUS = new File(Q_REL);
-		String[] listeFichier = CORPUS.list();
-		for (int i = 2; i < listeFichier.length; i++) {
-			String qrel= listeFichier[i];
-			BufferedReader readerQrel;
-			BufferedReader readerMyResp;
-			try {
-				readerQrel = new BufferedReader(new FileReader(Q_REL + "/" + qrel));
-				readerMyResp = new BufferedReader(new FileReader(NOM_DOSSIER + "/" + qrel));
-				ArrayList<String> listQrel=fileToList(readerQrel);
-				ArrayList<String> listMyResp=fileToList(readerMyResp);
-			} catch (FileNotFoundException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
-			
-		}
-
-	}*/
-	
-	public static void evaluatorRequest(){
-		MongoDB mongo=new MongoDB();
-		DBCollection coll=mongo.connection();
+	// get a hashmap from the qrel file
+	public static HashMap<String, Float> readQrelFile(File qrel){
+		HashMap<String, Float> res = new LinkedHashMap<String, Float>();
 		try {
-			BufferedReader reader = new BufferedReader(new FileReader(REQ));
-			ArrayList<String> requetes =fileToList(reader);
-			System.out.println(requetes.size());
-			for(int i=0; i< requetes.size();i++){
-				//find synonymes
-				
-				HashMap newreq = Synonym.changeRequest(requetes.get(i).split(","));
-				//search phrase
-				DBObject[] result =searchPhrase(mongo,coll,newreq.keySet());
-				//evaluer la requete
-				Object[] evaluation=evaluationRequest(result, newreq) ;
-				//copie dans fichier
-				display(evaluation, i+1);
-				System.out.println(requetes.get(i)+" "+(i+1));
+			Scanner sc = new Scanner(qrel);
+			sc.useLocale(Locale.FRANCE);
+			while (sc.hasNext(DOC_PATTERN)){
+				String docName = sc.next(DOC_PATTERN);
+				Float eval = sc.nextFloat();
+				res.put(docName, eval);
 			}
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
+			sc.close();
+		} catch (FileNotFoundException e) {
 			e.printStackTrace();
 		}
+		return res;
 	}
 	
 	
-
-	public  static ArrayList<String> fileToList(BufferedReader reader){
-
+	public static float compareRequest(HashMap<String, Float> qrel, ArrayList<String> resultat, int precision){
+		int valeurTotale = 0;
+		for (int i = 0 ; i < precision ; i++){
+			float valeur = qrel.get(resultat.get(i));
+			if (valeur > 0)
+				valeurTotale++;
+		}
+		return (float)valeurTotale / (float)precision;
+	}
+	
+	
+	// Read the req file and get the content
+	public static ArrayList<String> getResultatFromReq(File reqFile){
 		ArrayList<String> req = new ArrayList<String>();
-
-		String line;
+		Scanner sc;
 		try {
-			while ((line = reader.readLine()) != null) {
-				req.add(line);
-				
+			sc = new Scanner(reqFile);
+			while (sc.hasNext(DOC_PATTERN)){
+				req.add(sc.next(DOC_PATTERN));
 			}
-			reader.close();
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
+			sc.close();
+		} catch (FileNotFoundException e) {
 			e.printStackTrace();
 		}
-
-
 		return req;
 	}
+	
+	
+	
+	// Affiche une moyenne pour une précision donnée
+	public static String toString(Float moyenne, int precision){
+		return "Précision à " + precision + " : " + moyenne;
+	}
+	
+	
+	// main
+	public static void main(String[] args) {
+		/*
+		File qrel = new File(Q_REL + "/qrelQ1.txt");
+		HashMap<String, Float> map = readQrelFile(qrel);
 
-	public static  DBObject[] searchPhrase(MongoDB mongo,DBCollection coll,Set<String> array){
+		File fileReq = new File(NOM_DOSSIER + "/req1.txt");
+		ArrayList<String> req = getResultatFromReq(fileReq);
+
+		float moyenne = compareRequest(map, req, PR5);
+		System.out.println(toString(moyenne, PR5));
 		
-		//String [] array= request.split(",");
-		int i =0;
-		DBObject[] results=new DBObject[array.size()];
-		for(String str : array){
-		//	System.out.println(array[i]+"taille: "+array.length);
-			results[i]=mongo.findTerme(coll, str);
-			i++;
-		}
-		return results;
 
+		moyenne = compareRequest(map, req, PR10);
+		System.out.println(toString(moyenne, PR10));
+
+		moyenne = compareRequest(map, req, PR25);
+		System.out.println(toString(moyenne, PR25));
+		*/
+		evaluatorFinal();
 	}
-
-	public static void display(Object[] documents,int numero){
-		PrintWriter out;
-		try {
-			out = new PrintWriter(NOM_DOSSIER+"/"+"req"+numero+".txt");
-			for(int i=documents.length-1; i>=0; i--){
-			//	System.out.println((String)documents[i]);
-				out.println((String)documents[i]);
-			}
-			out.close();
-		} catch (FileNotFoundException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-
-
-	}
-
-
-	public static Object[] evaluationRequest(DBObject[] results, HashMap<String, Float> request) throws IOException{
-
-		/*/BufferedReader reader = new BufferedReader(new FileReader(REQ));
-		ArrayList<String> req= fileToList(reader);*/
-
-
-		HashMap<String, Float> vector = new HashMap<String, Float>();
-		for(DBObject aResult : results){
-			if(aResult!=null){
-				JSONParser json=new JSONParser();
-				try {
-					Object obj= json.parse(aResult.toString());
-					JSONObject document = (JSONObject)new JSONParser().parse(obj.toString());
-					JSONArray documentContain=(JSONArray)document.get("document");
-
-					for(int i=0; i< documentContain.size();i++){
-						JSONObject obj2=(JSONObject)documentContain.get(i);
-						Float n = vector.get(obj2.get("nom"));
-						Float ponderation = request.get(document.get("terme").toString());
-						if(n==null){
-							n=Float.parseFloat(obj2.get("poids").toString())*ponderation;
-						}else{
-							n+=Float.parseFloat(obj2.get("poids").toString())*ponderation;
-						}
-						vector.put(obj2.get("nom").toString(), n);
-
-
-					}
-					
-				} catch (ParseException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				}
-			}
-			
-		}
-		vector= (HashMap<String, Float>) MapUtil.sortByValue( vector );
-
-
-		return  vector.keySet().toArray();
-	}
-
-
-	public static void displayResults(DBObject[] results){
-
-		for(DBObject aResult : results){
-			JSONParser json=new JSONParser();
-			try {
-				Object obj= json.parse(aResult.toString());
-				JSONObject document = (JSONObject)new JSONParser().parse(obj.toString());
-				JSONArray documentContain=(JSONArray)document.get("document");
-
-				for(int i=2; i< documentContain.size();i++){
-					JSONObject obj2=(JSONObject)documentContain.get(i);
-					System.out.println("document=" + obj2.get("nom")+ " poids=" + obj2.get("poids") );
-
-				}
-				System.out.println(" ");
-			} catch (ParseException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
-		}
-	}
-
 }
