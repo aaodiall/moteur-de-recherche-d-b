@@ -10,8 +10,6 @@ import java.util.Scanner;
 
 public class Evaluator {
 
-	private static final String NOM_DOSSIER = "REQ";
-	private static final String Q_REL = "qrels";
 	private static final String DOC_PATTERN = "D[0-9]+\\.html";
 	private static final int PR5 = 5;
 	private static final int PR10 = 10;
@@ -20,14 +18,14 @@ public class Evaluator {
 	
 	// Evaluate all the requests
 	public static void evaluatorFinal(){
-		File[] resList = new File(NOM_DOSSIER).listFiles();
-		File[] qrelList = new File(Q_REL).listFiles();
+		File[] resList = new File(EvaluatorRequest.DOSSIER_REQ).listFiles();
+		File[] qrelList = new File(EvaluatorRequest.Q_REL).listFiles();
 		float moyenne5total = 0.0f;
 		float moyenne10total = 0.0f;
 		float moyenne25total = 0.0f;
 		// check the length
 		if (resList.length != qrelList.length){
-			System.err.println("Error : different number of files in the folders " + Q_REL + " and " + NOM_DOSSIER + "!");
+			System.err.println("Error : different number of files in the folders " + EvaluatorRequest.Q_REL + " and " + EvaluatorRequest.DOSSIER_REQ + "!");
 			return;
 		}
 		for (int i = 0 ; i < resList.length ; i++){
@@ -109,25 +107,4 @@ public class Evaluator {
 	}
 	
 	
-	// main
-	public static void main(String[] args) {
-		/*
-		File qrel = new File(Q_REL + "/qrelQ1.txt");
-		HashMap<String, Float> map = readQrelFile(qrel);
-
-		File fileReq = new File(NOM_DOSSIER + "/req1.txt");
-		ArrayList<String> req = getResultatFromReq(fileReq);
-
-		float moyenne = compareRequest(map, req, PR5);
-		System.out.println(toString(moyenne, PR5));
-		
-
-		moyenne = compareRequest(map, req, PR10);
-		System.out.println(toString(moyenne, PR10));
-
-		moyenne = compareRequest(map, req, PR25);
-		System.out.println(toString(moyenne, PR25));
-		*/
-		evaluatorFinal();
-	}
 }

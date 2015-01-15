@@ -1,14 +1,12 @@
 package controller;
 
 import java.io.BufferedReader;
-import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Set;
 
 import org.json.simple.JSONArray;
@@ -25,37 +23,20 @@ import dao.MongoDB;
 
 public class EvaluatorRequest {
 
-	private static final String REQ="req.txt";
-	private static final String NOM_DOSSIER = "REQ";
-	private static final String Q_REL = "qrels";
+	public static final String REQ="req.txt";
+	public static final String DOSSIER_REQ = "REQ";
+	public static final String Q_REL = "qrels";
 
+	/*
 	public  static void main( String args[] ){
-		evaluatorRequest(true);
+		evaluatorRequest(false);
 		//MongoDB mongo=new MongoDB();
 		//DBCollection coll=mongo.connection();
 		//displayResults(searchPhrase(mongo, coll, "personnage,Intouchable"));
 	}
+	*/
 	
 	
-	/*public static void evaluator(){
-		File CORPUS = new File(Q_REL);
-		String[] listeFichier = CORPUS.list();
-		for (int i = 2; i < listeFichier.length; i++) {
-			String qrel= listeFichier[i];
-			BufferedReader readerQrel;
-			BufferedReader readerMyResp;
-			try {
-				readerQrel = new BufferedReader(new FileReader(Q_REL + "/" + qrel));
-				readerMyResp = new BufferedReader(new FileReader(NOM_DOSSIER + "/" + qrel));
-				ArrayList<String> listQrel=fileToList(readerQrel);
-				ArrayList<String> listMyResp=fileToList(readerMyResp);
-			} catch (FileNotFoundException e) {
-				e.printStackTrace();
-			}
-			
-		}
-
-	}*/
 	
 	public static void evaluatorRequest(boolean withSPARQL){
 		MongoDB mongo=new MongoDB();
@@ -109,12 +90,9 @@ public class EvaluatorRequest {
 	}
 
 	public static  DBObject[] searchPhrase(MongoDB mongo,DBCollection coll,Set<String> array){
-		
-		//String [] array= request.split(",");
 		int i =0;
 		DBObject[] results=new DBObject[array.size()];
 		for(String str : array){
-		//	System.out.println(array[i]+"taille: "+array.length);
 			results[i]=mongo.findTerme(coll, str);
 			i++;
 		}
@@ -125,9 +103,8 @@ public class EvaluatorRequest {
 	public static void display(Object[] documents,int numero){
 		PrintWriter out;
 		try {
-			out = new PrintWriter(NOM_DOSSIER+"/"+"req"+numero+".txt");
+			out = new PrintWriter(DOSSIER_REQ+"/"+"req"+numero+".txt");
 			for(int i=documents.length-1; i>=0; i--){
-			//	System.out.println((String)documents[i]);
 				out.println((String)documents[i]);
 			}
 			out.close();
@@ -140,11 +117,6 @@ public class EvaluatorRequest {
 
 
 	public static Object[] evaluationRequest(DBObject[] results, HashMap<String, Float> request) throws IOException{
-
-		/*/BufferedReader reader = new BufferedReader(new FileReader(REQ));
-		ArrayList<String> req= fileToList(reader);*/
-
-
 		HashMap<String, Float> vector = new HashMap<String, Float>();
 		for(DBObject aResult : results){
 			if(aResult!=null){
