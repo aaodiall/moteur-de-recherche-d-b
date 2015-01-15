@@ -75,9 +75,11 @@ public class Evaluator {
 	public static float compareRequest(HashMap<String, Float> qrel, ArrayList<String> resultat, int precision){
 		int valeurTotale = 0;
 		for (int i = 0 ; i < precision ; i++){
-			float valeur = qrel.get(resultat.get(i));
-			if (valeur > 0)
-				valeurTotale++;
+			Float valeur = qrel.get(resultat.get(i));
+			if (valeur != null){
+				if (valeur > 0)
+					valeurTotale++;
+			}
 		}
 		return (float)valeurTotale / (float)precision;
 	}

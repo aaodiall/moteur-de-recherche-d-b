@@ -68,7 +68,8 @@ public class Launcher {
 
 	public final static void launchRequestWithOnto(){
 		System.out.println("Lancement des requêtes présentes dans le fichier " + EvaluatorRequest.REQ);
-		System.out.println("Evaluation à l'aide de l'ontologie :");
+		File onto = new File(ONTO_NAME);
+		System.out.println("Utilisation de l'ontologie " + onto.getAbsolutePath());
 		EvaluatorRequest.evaluatorRequest(true);
 		System.out.println("Résultats des requêtes généré dans le dossier " + EvaluatorRequest.DOSSIER_REQ + " !");
 	}
@@ -76,8 +77,6 @@ public class Launcher {
 	public final static void evaluateRequest(){
 		System.out.println("Evaluation du résultat des requêtes...");
 		System.out.println("Lecture des fichiers dans le dossier " + EvaluatorRequest.Q_REL);
-		File onto = new File(ONTO_NAME);
-		System.out.println("Utilisation de l'ontologie " + onto.getAbsolutePath());
 		Evaluator.evaluatorFinal();
 	}
 }

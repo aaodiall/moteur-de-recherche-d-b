@@ -57,21 +57,27 @@ public class Parser {
 		// Parcourir le dossier
 		File CORPUS = new File(NOM_DOSSIER);
 		String[] listeFichier = CORPUS.list();
+
+		// charge les mots de la stopliste.txt dans une liste
+		List<String> stoplist = new ArrayList<String>();
+		try{
+			BufferedReader reader = new BufferedReader(new FileReader(STOP_LIST));
+	
+			String line;
+			while ((line = reader.readLine()) != null) {
+				stoplist.add(line);
+				stoplist.add(line.substring(0, 1).toUpperCase()	+ line.substring(1));
+			}
+			reader.close();
+		} catch(IOException e){
+		}
+		
 		for (int i = 2; i < listeFichier.length; i++) {
 			String nomDoc = listeFichier[i];
+			System.out.println("    Fichier " + (i-1) + "/" + (listeFichier.length-1) + " : " + nomDoc);
 			File input = new File(NOM_DOSSIER + "/" + nomDoc);
 
 			try {
-				// charge les mots de la stopliste.txt dans une liste
-				BufferedReader reader = new BufferedReader(new FileReader(STOP_LIST));
-				List<String> stoplist = new ArrayList<String>();
-
-				String line;
-				while ((line = reader.readLine()) != null) {
-					stoplist.add(line);
-					stoplist.add(line.substring(0, 1).toUpperCase()	+ line.substring(1));
-				}
-				reader.close();
 
 				// on parse le fichier html
 				Document doc = Jsoup.parse(input, "UTF-8", "");
