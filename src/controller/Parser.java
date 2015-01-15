@@ -100,11 +100,7 @@ public class Parser {
 
 				// on supprime la ponctuation (trouver un regex qui regoupe tous les accent)
 				// ÀÁÂÃÄÅàáâãäåÒÓÔÕÖØòóôõöøÈÉÊËèéêëÇçÌÍÎÏìíîïÙÚÛÜùúûüÿÑñ ^[a-zA-Z]{3,7}$ Ééèêù
-				text1 = text1
-						.replaceAll(
-								"[^a-zA-Z0-9ÀÁÂÄÅáâãäåÒÓÔÕÖØòóôõöøÈÉÊËèéêëÇçÌÍÎÏìíîïÙÚÛÜùúûüÿÑñ\\s]",
-								" ").replaceAll("\\s+", " ");
-				;
+				text1 = text1.replaceAll("[^a-zA-Z0-9ÀÁÂÄÅáâãäåÒÓÔÕÖØòóôõöøÈÉÊËèéêëÇçÌÍÎÏìíîïÙÚÛÜùúûüÿÑñ\\s]"," ").replaceAll("\\s+", " ");
 
 				// on supprime les mots de la stopliste
 				for (String s : stoplist) {
@@ -118,7 +114,6 @@ public class Parser {
 					Etiquette etiquette= new Etiquette(s, wordsCounted.get(s),nomDoc);
 					mongo.addEtiquette(coll, etiquette);
 				}
-
 			} catch (IOException e) {
 				e.printStackTrace();
 			}

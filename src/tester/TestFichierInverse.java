@@ -3,7 +3,6 @@ package tester;
 import java.util.ArrayList;
 
 import model.FichierInverse;
-import controller.Parser;
 
 public class TestFichierInverse {
 
