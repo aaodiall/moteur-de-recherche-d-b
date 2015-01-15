@@ -42,13 +42,15 @@ public class Parser {
 	
 	private static HashMap<String, Integer> createValueTag(){
 		HashMap<String, Integer> valueTag = new HashMap<String, Integer>();
-		valueTag.put("title", 7);
+		valueTag.put("title", 6);
 		valueTag.put("h1", 5);
 		valueTag.put("h2", 4);
 		valueTag.put("h3", 3);
 		valueTag.put("b", 2);
 		valueTag.put("strong", 2);
 		valueTag.put("em", 2);
+		valueTag.put("meta[name=keywords]", 7);
+		valueTag.put("meta[name=description]", 2);
 		return valueTag;
 	}
 	
@@ -101,6 +103,21 @@ public class Parser {
 				for (int i1 = 0 ; i1 < valueTag.get("title") ; i1++){
 					sbd.append(doc.title());
 					sbd.append(" ");
+				}
+				// On ajoute les meta
+				for (int i1 = 0 ; i1 < valueTag.get("meta[name=keywords]") ; i1++){
+					try {
+					sbd.append(doc.select("meta[name=keywords]").get(0).attr("content"));
+					sbd.append(" ");
+					} catch (IndexOutOfBoundsException e){// If there is no meta keywords
+					}
+				}
+				for (int i1 = 0 ; i1 < valueTag.get("meta[name=description]") ; i1++){
+					try {
+					sbd.append(doc.select("meta[name=description]").get(0).attr("content"));
+					sbd.append(" ");
+					} catch (IndexOutOfBoundsException e){// If there is no meta description
+					}
 				}
 				String text1 = sbd.toString();
 
