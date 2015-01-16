@@ -7,7 +7,6 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
-import java.util.List;
 
 import model.Etiquette;
 
@@ -60,25 +59,13 @@ public class Parser {
 		File CORPUS = new File(NOM_DOSSIER);
 		String[] listeFichier = CORPUS.list();
 
-		// charge les mots de la stopliste.txt dans une liste
-		List<String> stoplist = new ArrayList<String>();
-		try{
-			BufferedReader reader = new BufferedReader(new FileReader(STOP_LIST));
-	
-			String line;
-			while ((line = reader.readLine()) != null) {
-				stoplist.add(line);
-				stoplist.add(line.substring(0, 1).toUpperCase()	+ line.substring(1));
-			}
-			reader.close();
-		} catch(IOException e){
-		}
 		
 		for (int i = 2; i < listeFichier.length; i++) {
 			String nomDoc = listeFichier[i];
 			System.out.println("    Fichier " + (i-1) + "/" + (listeFichier.length-1) + " : " + nomDoc);
 			File input = new File(NOM_DOSSIER + "/" + nomDoc);
-
+			ArrayList<String> stoplist = creerStopList();
+			
 			try {
 
 				// on parse le fichier html
@@ -178,5 +165,22 @@ public class Parser {
 			}
 		}
 		return elts;
+	}
+	
+	// Creer une stoplist
+	public static ArrayList<String> creerStopList(){
+		// charge les mots de la stopliste.txt dans une liste
+		ArrayList<String> stoplist = new ArrayList<String>();
+		try{
+			BufferedReader reader = new BufferedReader(new FileReader(STOP_LIST));
+			String line;
+			while ((line = reader.readLine()) != null) {
+					stoplist.add(line);
+					stoplist.add(line.substring(0, 1).toUpperCase()	+ line.substring(1));
+				}
+				reader.close();
+			} catch(IOException e){
+		}
+		return stoplist;
 	}
 }

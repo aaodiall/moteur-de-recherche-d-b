@@ -44,14 +44,16 @@ public class EvaluatorRequest {
 		try {
 			BufferedReader reader = new BufferedReader(new FileReader(REQ));
 			ArrayList<String> requetes =fileToList(reader);
-			System.out.println(requetes.size());
 			for(int i=0; i< requetes.size();i++){
 				//find synonymes if withSPARQL is true
 				HashMap<String, Float> newreq = new HashMap<String, Float>();
-				if (withSPARQL)
+				if (withSPARQL){
 					newreq = Synonym.changeRequest(requetes.get(i).split(","));
+				}
 				else{
-					String[] req = requetes.get(i).split(",");
+					String reqModif = requetes.get(i).replaceAll(",", " ");
+					reqModif = reqModif.replaceAll("[ ]+", " ");
+					String[] req = reqModif.split(" ");
 					for (int j = 0 ; j < req.length ; j++)
 						newreq.put(req[j], (float) 1.0);
 				}
@@ -61,7 +63,6 @@ public class EvaluatorRequest {
 				Object[] evaluation=evaluationRequest(result, newreq) ;
 				//copie dans fichier
 				display(evaluation, i+1);
-				System.out.println(requetes.get(i)+" "+(i+1));
 			}
 		} catch (IOException e) {
 			e.printStackTrace();

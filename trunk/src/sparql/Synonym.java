@@ -2,14 +2,15 @@ package sparql;
 
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
+
+import controller.Parser;
 
 public class Synonym {
 
-	public static List<String> getSynonyms(String term){
+	public static String getSynonyms(String term){
 		// Structure that contains the synonyms of the term
-		List<String> synonymes = new ArrayList<String>();
+		String synonymes = new String();
 		// Connection to the client
         SparqlClient sparqlClient = new SparqlClient("localhost:3030/space");
         // Test of the connection
@@ -30,11 +31,14 @@ public class Synonym {
             Iterable<Map<String, String>> results = sparqlClient.select(query);
             // Put the results in a list
             for (Map<String, String> result : results) {
-            	synonymes.add(result.get("name"));
+            	synonymes += (result.get("name") + " ");
             }
         }
         else{
         	System.out.println("service is DOWN");
+        }
+        if (synonymes.isEmpty()){
+        	synonymes = term;
         }
 		return synonymes;
 	}
@@ -43,15 +47,30 @@ public class Synonym {
 	// Méthode qui prend en argument une requete, et qui la modifie
 	public static HashMap<String, Float> changeRequest(String[] requete){
 		HashMap<String, Float> res = new HashMap<String, Float>();
+		// creation de la stoplist
+		ArrayList<String> stoplist = Parser.creerStopList();
+		// On parcours tout les mots de la requête initiale
 		for (String mot : requete){
-			ArrayList<String> synonymes = (ArrayList<String>) getSynonyms(mot);
-			if (synonymes.size() == 0){
+			String synonymes = getSynonyms(mot);
+			// on supprime les mots de la stopliste
+			for (String s : stoplist) {
+				synonymes = synonymes.replaceAll("[ .,]" + s + "[ .,]", " ");
+				synonymes = synonymes.replaceAll("^" + s + "[ .,]", "");
+			}
+			// On split synonymes dans une arraylist
+			String[] tabSyn = synonymes.split(" ");
+			if (tabSyn.length == 0){
 				res.put(mot, (float) 1.0);
 			}
 			else{
-				float ponderation = (float) (1.0/(float)(synonymes.size()));
-				for (String syn : synonymes){
-					res.put(syn, ponderation);
+				float ponderation = 1.0f/(float)tabSyn.length;
+				for (int i = 0 ; i<tabSyn.length ; i++){
+					if (res.get(tabSyn[i]) != null){
+						res.put(tabSyn[i], ponderation + res.get(tabSyn[i]));
+					}
+					else{
+						res.put(tabSyn[i], ponderation);						
+					}
 				}
 			}
 		}
@@ -61,18 +80,12 @@ public class Synonym {
 	
 	
 	public static void main(String[] args) {
-		/*
-		String word = "personnage";
-		List<String> synonymes = getSynonyms(word);
-		System.out.println("Affichage des synonymes de " + word + " : ");
-		for (String syn : synonymes){
-			System.out.println("  " + syn);
-		}
-		*/
-		String[] req = {"personnage", "Intouchable"};
-		HashMap<String, Float> newreq = changeRequest(req);
-		for (String mot : newreq.keySet() ){
-			System.out.println(mot + "   pondération : " + newreq.get(mot));
+		String requete[] = new String[] {"lieu","naissance","Omar Sy"};
+		//String requete[] = new String[] {"personnes","Intouchables"};
+		HashMap<String, Float> newreq = changeRequest(requete);
+		//System.out.println(getSynonyms(requete[1]));
+		for (String mot : newreq.keySet()){
+			System.out.println(mot + " : " + newreq.get(mot));
 		}
 	}
 }
